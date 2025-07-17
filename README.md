@@ -1,2 +1,2 @@
-# DDP_Course_Project
-DDP_Course_Project
+# Predicting Child Height App
+This application allows you to explore height prediction models.
