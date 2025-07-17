@@ -1,0 +1,101 @@
+---
+title: "DDP_Course_Project"
+author: "Emma Wei Chen"
+date: "2025-07-17"
+output: slidy_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## App Description
+
+### App Purpose
+This application allows you to explore height prediction models using age.
+
+### How to Use
+1. Choose an age using the slider bar
+2. Submit
+
+You could explore the difference between boys and girls using the tabs.  
+
+### Data Source
+Simulated data is obtained from the *child_growth* dataset in the *doBy* package.
+```{r}
+library(ggplot2)
+```
+
+```{r echo = TRUE}
+library(doBy)
+data("child_growth")
+my_data <- child_growth
+my_data$gender <- factor(my_data$gender)
+male_data <- subset(my_data, gender == "boy")
+```
+
+## Models
+
+Two models are used to predict child height using age.  
+1. Linear model  
+2. Logistic model
+
+## Model 1: Linear model
+Using male data as an example here. 
+Model fitting indicated by the red line. 
+
+```{r echo = TRUE, warning=FALSE}
+model1_male <- lm(height ~ age, data = male_data)
+
+```
+
+```{r echo = FALSE, warning=FALSE}
+# Create a small data frame to plot the linear model line with color mapping for legend
+linear_line_df <- data.frame(
+  age = c(min(male_data$age), max(male_data$age))
+)
+linear_line_df$height <- coef(model1_male)[1] + coef(model1_male)[2] * linear_line_df$age
+linear_line_df$model <- "Model 1: Linear"
+
+p <- ggplot(male_data, aes(x = age, y = height)) +
+          geom_point(position = "jitter", alpha = 0.5, color = "lightblue") +
+          labs(
+            x = "Age", 
+            y = "Height"
+          ) +
+          xlim(c(1, 18)) +
+          ylim(c(20, 210)) +
+          theme_classic() +
+          theme(
+            text = element_text(size = 20)
+          )
+p <- p + geom_line(data = linear_line_df, aes(x = age, y = height), color = "red", size = 1)
+p
+```
+
+## Model 2: Logistic model
+Using male data as an example here. 
+Model fitting indicated by the blue line. 
+
+```{r echo = TRUE, warning=FALSE}
+model2_male <- nls(height ~ Asym / (1 + exp((xmid - age)/scal)),
+                      data = male_data,
+                      start = list(Asym = 180, xmid = 13, scal = 2))
+
+```
+
+```{r echo = FALSE, warning=FALSE}
+age_seq <- seq(1, 18, length.out = 200)
+pred_male <- data.frame(
+  age = age_seq,
+  height = predict(model2_male, newdata = data.frame(age = age_seq)),
+  gender = "boy"
+)
+
+# Add nonlinear model line with color mapped to model for legend
+pred_male$model <- "Model 2: Logistic"  # make sure this column exists in pred_male
+p <- p + geom_line(data = pred_male, aes(x = age, y = height), color = "blue", size = 1)
+
+p
+    
+```
